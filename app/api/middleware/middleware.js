@@ -1,6 +1,7 @@
+// app/api/middleware/middleware.js
 const jwt = require("jsonwebtoken");
 const User = require("../register/models");
-require("dotenv").config(); // Pastikan ini di atas
+require("dotenv").config();
 
 const verifyToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;

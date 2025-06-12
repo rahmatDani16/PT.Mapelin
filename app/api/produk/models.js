@@ -42,5 +42,5 @@ const Produk = sequelize.define("produk",{
 },{
     freezeTableName : true
 });
-Produk.sync({force : true});
+Produk.sync();
 module.exports = Produk;

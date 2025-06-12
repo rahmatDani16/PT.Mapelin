@@ -23,11 +23,15 @@ const Transaksi = sequelize.define("transaksi",{
         type : DataTypes.INTEGER,
         allowNull : false
     },
-        tanggalTransaksi: {
+    tanggalTransaksi: {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW
     },
+    userId: {
+         type: DataTypes.INTEGER,
+         allowNull: false
+     },
     createdAt: {
         type: DataTypes.DATE,
         allowNull: true
