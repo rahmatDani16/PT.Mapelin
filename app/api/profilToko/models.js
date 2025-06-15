@@ -27,6 +27,11 @@ const ProfileToko = sequelize.define("profiletoko",{
         type : DataTypes.STRING,
         allowNull : false
     },
+    userId: {
+     type: DataTypes.INTEGER,
+     allowNull: false ,
+     unique : true  
+    },
     createdAt : {
         type : DataTypes.DATE,
         allowNull : true

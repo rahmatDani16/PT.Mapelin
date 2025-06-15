@@ -3,11 +3,11 @@ const Transaksi = require("../transaksi/models");
 const Produk = require("../produk/models");
 const Pembayaran = require("../pembayaran/models");
 
-// Setup relasi model
+// Relasi antar model
 Transaksi.belongsTo(Produk, { foreignKey: "idProduk" });
 Transaksi.belongsTo(Pembayaran, { foreignKey: "idMetodePembayaran" });
 
-// Validasi input transaksi
+// ✅ Validasi input transaksi
 const validasiTransaksi = [
   check("idMetodePembayaran")
     .notEmpty().withMessage("Metode pembayaran wajib diisi")
@@ -20,7 +20,7 @@ const validasiTransaksi = [
     .isInt({ min: 1 }).withMessage("Jumlah beli minimal 1")
 ];
 
-// Membuat transaksi
+// ✅ Membuat transaksi
 const createTransaksi = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -29,8 +29,13 @@ const createTransaksi = async (req, res) => {
     }
 
     const { idMetodePembayaran, idProduk, jumlahBeli } = req.body;
+    const userId = req.user?.id;
 
-    const produk = await Produk.findOne({ where: { id: idProduk } });
+    if (!userId) {
+      return res.status(401).json({ message: "User tidak terautentikasi" });
+    }
+
+    const produk = await Produk.findByPk(idProduk);
     if (!produk) {
       return res.status(404).json({ message: "Produk tidak ditemukan" });
     }
@@ -46,7 +51,7 @@ const createTransaksi = async (req, res) => {
       idProduk,
       jumlahBeli,
       total,
-      userId: req.user?.id // tambahkan userId jika middleware tersedia
+      userId
     });
 
     await produk.update({ stok: produk.stok - jumlahBeli });
@@ -64,7 +69,7 @@ const createTransaksi = async (req, res) => {
   }
 };
 
-// Menampilkan semua transaksi user
+// ✅ Menampilkan semua transaksi milik user
 const getAllTransaksi = async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -73,11 +78,11 @@ const getAllTransaksi = async (req, res) => {
     }
 
     const transaksi = await Transaksi.findAll({
+      where: { userId },
       include: [
         { model: Produk, attributes: ["namaProduk", "harga"] },
         { model: Pembayaran, attributes: ["metodePembayaran"] }
-      ],
-      where: { userId }
+      ]
     });
 
     res.status(200).json({
@@ -93,7 +98,7 @@ const getAllTransaksi = async (req, res) => {
   }
 };
 
-// Mengupdate transaksi
+// ✅ Mengupdate transaksi
 const updateTransaksi = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -102,39 +107,68 @@ const updateTransaksi = async (req, res) => {
     }
 
     const { id } = req.params;
-    const { idMetodePembayaran, jumlahBeli } = req.body;
+    const { idMetodePembayaran, idProduk, jumlahBeli } = req.body;
+    const userId = req.user?.id;
 
-    const transaksi = await Transaksi.findOne({ where: { id } });
-    if (!transaksi) {
-      return res.status(404).json({ message: "Transaksi tidak ditemukan" });
+    if (!userId) {
+      return res.status(401).json({ message: "User tidak terautentikasi" });
     }
 
-    await transaksi.update({ idMetodePembayaran, jumlahBeli });
+    const transaksi = await Transaksi.findOne({ where: { id, userId } });
+    if (!transaksi) {
+      return res.status(404).json({ message: "Transaksi tidak ditemukan atau bukan milik user ini" });
+    }
+
+    const metode = await Pembayaran.findByPk(idMetodePembayaran);
+    if (!metode) {
+      return res.status(404).json({ message: "Metode pembayaran tidak ditemukan" });
+    }
+
+    const produk = await Produk.findByPk(idProduk);
+    if (!produk) {
+      return res.status(404).json({ message: "Produk tidak ditemukan" });
+    }
+
+    const total = produk.harga * jumlahBeli;
+
+    await transaksi.update({
+      idMetodePembayaran,
+      idProduk,
+      jumlahBeli,
+      total
+    });
 
     res.status(200).json({
-      status: 200,
-      message: "Transaksi berhasil diperbarui",
+      message: "Transaksi berhasil diupdate",
       data: transaksi
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Gagal memperbarui transaksi",
-      error: error.message
-    });
+    res.status(500).json({ message: "Gagal update transaksi", error: error.message });
   }
 };
 
-// Menghapus transaksi
+// ✅ Menghapus transaksi
 const deleteTransaksi = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user?.id;
 
-    const transaksi = await Transaksi.findOne({ where: { id } });
+    if (!userId) {
+      return res.status(401).json({ message: "User tidak terautentikasi" });
+    }
+
+    const transaksi = await Transaksi.findOne({ where: { id, userId } });
     if (!transaksi) {
-      return res.status(404).json({ message: "Transaksi tidak ditemukan" });
+      return res.status(404).json({ message: "Transaksi tidak ditemukan atau bukan milik user ini" });
+    }
+
+    const produk = await Produk.findByPk(transaksi.idProduk);
+    if (produk) {
+      await produk.update({ stok: produk.stok + transaksi.jumlahBeli });
     }
 
     await transaksi.destroy();
+
     res.status(200).json({
       status: 200,
       message: "Transaksi berhasil dihapus"

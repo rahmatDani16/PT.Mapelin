@@ -38,7 +38,7 @@ const getAllKategori = async (req, res) => {
     const kategori = await Kategori.findAll();
     res.status(200).json({
       status: 200,
-      message: "Semua kategori",
+      message: "Daftar kategori milik Anda berhasil ditampilkani",
       data: kategori
     });
   } catch (error) {
@@ -86,7 +86,7 @@ const updateKategori = async (req, res) => {
 
     res.status(200).json({
       status: 200,
-      message: "Kategori berhasil diperbarui",
+      message:"Daftar kategori milik Anda berhasil diambil",
       data: kategori
     });
   } catch (error) {

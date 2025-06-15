@@ -43,6 +43,5 @@ const Transaksi = sequelize.define("transaksi",{
 }, {
     freezeTableName: true
 });
-
 Transaksi.sync();
 module.exports = Transaksi;

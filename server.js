@@ -5,6 +5,10 @@ require("dotenv").config();
 
 const app = express();
 
+// === Import dan aktifkan relasi antar model ===
+require("./app/api/models/relasi");
+
+// Middleware & Router
 const verifyToken = require("./app/api/middleware/middleware");
 const routerAuth = require("./app/api/register/router");
 const routerProduk = require("./app/api/produk/router");
@@ -13,6 +17,7 @@ const routerProfileToko = require("./app/api/profilToko/router");
 const routerPembayaran = require("./app/api/pembayaran/router");
 const routerTransaksi = require("./app/api/transaksi/router");
 
+// Middleware umum
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

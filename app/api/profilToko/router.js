@@ -1,11 +1,17 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const {validation,createProfileToko ,getAllProfileToko,updateProfileToko, deleteProfileToko} = require("../profilToko/controller");
+const {
+  validation,
+  createProfileToko,
+  getProfileToko,
+  updateProfileToko,
+  deleteProfileToko
+} = require('./controller');
+const verifyToken = require('../middleware/middleware');
 
+router.post('/profile-toko/create', verifyToken, validation, createProfileToko);
+router.get('/profile-toko', verifyToken, getProfileToko);
+router.put('/profile-toko/update/:id', verifyToken, validation, updateProfileToko);
 
-router.post("/profile/create",createProfileToko);
-router.get("/profile",getAllProfileToko);
-router.put("/profile/update",validation,updateProfileToko);
-router.delete("/profile/delete",deleteProfileToko);
-
+router.delete("/profile-toko/delete/:id", verifyToken, deleteProfileToko);
 module.exports = router;

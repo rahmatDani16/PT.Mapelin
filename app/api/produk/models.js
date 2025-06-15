@@ -29,7 +29,7 @@ const Produk = sequelize.define("produk",{
     },
     userId : {
         type : DataTypes.INTEGER,
-        allowNull : false
+        allowNull : false,
     },
     createdAt : {
         type : DataTypes.DATE,
@@ -42,5 +42,5 @@ const Produk = sequelize.define("produk",{
 },{
     freezeTableName : true
 });
-Produk.sync();
+Produk.sync({alter : true});
 module.exports = Produk;

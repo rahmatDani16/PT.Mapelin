@@ -6,12 +6,13 @@ const {
   getAllTransaksi,
   updateTransaksi,
   deleteTransaksi
-} = require("../transaksi/controller");
+} = require("./controller");
 
-// Rute untuk transaksi
-router.post("/transaksi/create", validasiTransaksi, createTransaksi);
-router.get("/transaksi", getAllTransaksi);
-router.put("/transaksi/:id", validasiTransaksi, updateTransaksi);
-router.delete("/transaksi/:id", deleteTransaksi);
+const verifyToken = require("../middleware/middleware");
+
+router.post("/transaksi/create", verifyToken, validasiTransaksi, createTransaksi);
+router.get("/transaksi", verifyToken, getAllTransaksi);
+router.put("/transaksi/update/:id", verifyToken, validasiTransaksi, updateTransaksi);
+router.delete("/transaksi/delete/:id", verifyToken, deleteTransaksi);
 
 module.exports = router;

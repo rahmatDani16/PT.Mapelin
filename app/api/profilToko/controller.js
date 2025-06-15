@@ -1,5 +1,7 @@
 const { check, validationResult } = require("express-validator");
 const ProfileToko = require("../profilToko/models");
+const bcrypt = require("bcryptjs");
+
 
 // Validasi input profile toko 
 const validation = [
@@ -18,12 +20,17 @@ const validation = [
     .isMobilePhone().withMessage("Format nomor HP tidak valid")
 ];
 
-// Membuat Profil Toko 
+// Membuat Profil Toko (user hanya bisa buat 1 profil)
 const createProfileToko = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ message: errors.array() });
+    }
+
+    const existing = await ProfileToko.findOne({ where: { userId: req.user.id } });
+    if (existing) {
+      return res.status(400).json({ message: "Profil toko sudah ada" });
     }
 
     const { email, password, alamat, namaToko, noHp } = req.body;
@@ -33,7 +40,8 @@ const createProfileToko = async (req, res) => {
       password,
       alamat,
       namaToko,
-      noHp
+      noHp,
+      userId: req.user.id
     });
 
     res.status(201).json({
@@ -50,17 +58,15 @@ const createProfileToko = async (req, res) => {
   }
 };
 
-// Mengambil profil toko berdasarkan user login
-const getAllProfileToko = async (req, res) => {
+// Mendapatkan Profil Toko berdasarkan user yang login
+const getProfileToko = async (req, res) => {
   try {
     const profile = await ProfileToko.findOne({
-      where: { id: req.user.id }
+      where: { userId: req.user.id }
     });
 
     if (!profile) {
-      return res.status(404).json({
-        message: "Profile toko tidak ditemukan"
-      });
+      return res.status(404).json({ message: "Profile toko tidak ditemukan" });
     }
 
     res.status(200).json({
@@ -77,29 +83,40 @@ const getAllProfileToko = async (req, res) => {
   }
 };
 
-// Mengupdate profil toko 
+// Mengupdate profil toko berdasarkan user login
 const updateProfileToko = async (req, res) => {
   try {
+    // Validasi dari express-validator
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ message: errors.array() });
     }
 
+    const { id } = req.params; // Ambil id dari URL
+    const { email, password, alamat, namaToko, noHp } = req.body;
+
+    // Cari profil berdasarkan ID dan pastikan dimiliki oleh user yang sedang login
     const profile = await ProfileToko.findOne({
-      where: { id: req.user.id }
+      where: {
+        id,
+        userId: req.user.id, // agar user hanya bisa update miliknya sendiri
+      }
     });
 
     if (!profile) {
-      return res.status(404).json({
-        message: "Profile toko tidak ditemukan"
-      });
+      return res.status(404).json({ message: "Profil toko tidak ditemukan atau bukan milik user ini" });
     }
 
-    const { email, password, alamat, namaToko, noHp } = req.body;
+    // Hash password jika diberikan
+    let hashedPassword = profile.password;
+    if (password && password.trim() !== "") {
+      hashedPassword = await bcrypt.hash(password, 10);
+    }
 
+    // Update profil toko
     await profile.update({
       email,
-      password,
+      password: hashedPassword,
       alamat,
       namaToko,
       noHp
@@ -107,7 +124,7 @@ const updateProfileToko = async (req, res) => {
 
     res.status(200).json({
       status: 200,
-      message: "Profile berhasil diperbarui",
+      message: "Profil toko berhasil diperbarui",
       data: profile
     });
 
@@ -119,17 +136,20 @@ const updateProfileToko = async (req, res) => {
   }
 };
 
-// Menghapus profil toko 
+// Menghapus profil toko
 const deleteProfileToko = async (req, res) => {
   try {
-    const profile = await ProfileToko.findOne({
-      where: { id: req.user.id }
-    });
+    const { id } = req.params;
+
+    const profile = await ProfileToko.findByPk(id);
 
     if (!profile) {
-      return res.status(404).json({
-        message: "Profil toko tidak ditemukan"
-      });
+      return res.status(404).json({ message: "Profil toko tidak ditemukan" });
+    }
+
+    // Cek apakah user yang sedang login adalah pemilik profil tersebut
+    if (profile.userId !== req.user.id) {
+      return res.status(403).json({ message: "Akses ditolak. Bukan pemilik profil ini." });
     }
 
     await profile.destroy();
@@ -150,7 +170,7 @@ const deleteProfileToko = async (req, res) => {
 module.exports = {
   validation,
   createProfileToko,
-  getAllProfileToko,
+  getProfileToko,
   updateProfileToko,
   deleteProfileToko
 };

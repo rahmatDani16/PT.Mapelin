@@ -7,10 +7,11 @@ const {
   updatePembayaran,
   deletePembayaran
 } = require("./controller");
+const verifyToken = require("../middleware/middleware")
 
-router.post("/pembayaran/create", validasiPembayaran, createPembayaran);
-router.get("/pembayaran", getAllPembayaran);
-router.put("/pembayaran/:id", validasiPembayaran, updatePembayaran);
-router.delete("/pembayaran/:id", deletePembayaran);
+router.post("/pembayaran/create",verifyToken, validasiPembayaran, createPembayaran);
+router.get("/pembayaran",verifyToken, getAllPembayaran);
+router.put("/pembayaran/update/:id",verifyToken, validasiPembayaran, updatePembayaran);
+router.delete("/pembayaran/delete/:id",verifyToken, deletePembayaran);
 
 module.exports = router;

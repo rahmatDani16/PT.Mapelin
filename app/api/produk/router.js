@@ -13,8 +13,8 @@ const {
 const verifyToken = require("../middleware/middleware");
 const upload = require("../middleware/upload"); 
 
-router.get("produk", verifyToken, getAllProduk);
-router.get("produk/:id", verifyToken, getProdukByid);
+router.get("/produk", verifyToken, getAllProduk);
+router.get("/produk/:id", verifyToken, getProdukByid);
 router.post(
   "/produk/create",
   verifyToken,
@@ -23,13 +23,13 @@ router.post(
   createProduk
 );
 router.put(
-  "produk/update/:id",
+  "/produk/update/:id",
   verifyToken,
   upload.single("gambarProduk"),
   validasi,
   updateProduk
 );
 
-router.delete("produk/delete/:id", verifyToken, deleteProduk);
+router.delete("/produk/delete/:id", verifyToken, deleteProduk);
 
 module.exports = router;

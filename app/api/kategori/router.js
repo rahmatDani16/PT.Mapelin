@@ -7,10 +7,10 @@ const verifyToken = require("../middleware/middleware")
 const { validasi } = kategoriController;
 
 
-router.get("kategori/", kategoriController.getAllKategori);
-router.get("kategori/:id", kategoriController.getKategoriById);
+router.get("/kategori", kategoriController.getAllKategori);
+router.get("/kategori/:id", kategoriController.getKategoriById);
 router.post("/kategori/create", verifyToken, validasi, kategoriController.createKategori);
-router.put("kategori/:id", validasi, kategoriController.updateKategori);
-router.delete("kategori/:id", kategoriController.deleteKategori);
+router.put("/kategori/update/:id", validasi, kategoriController.updateKategori);
+router.delete("/kategori/delete/:id", kategoriController.deleteKategori);
 
 module.exports = router;
